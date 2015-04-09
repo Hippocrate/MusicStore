@@ -8,12 +8,6 @@ param(
     [string] $password
 )
 
-function Get-ScriptDirectory 
-{ 
-    $Invocation = (Get-Variable MyInvocation -Scope 1).Value 
-    Split-Path $Invocation.MyCommand.Path 
-} 
-
 function UpdateHostInProjectJson($projectFile, $newhost)
 {
     (Get-Content $projectFile) | 
@@ -33,10 +27,15 @@ $workDir = (get-item $projectFile).Directory.FullName
 $remoteRoot="\\" + $server
 $remoteDir= Join-Path $remoteRoot -ChildPath $serverFolder
 
+Write-Host "Project: $projectName"
+Write-Host "Work directory: $workDir"
+Write-Host "Remote dir: $remoteDir"
+Write-Host "User name: $userName"
+
 try
 {
     if ($userName) {
-        net use $remoteRoot $password /USER:$userName
+		net use $remoteRoot $password /USER:$userName
         if ($lastexitcode -ne 0) {
             exit 1
         }
@@ -55,8 +54,8 @@ try
 
     Write-Host "Bundling the application..."
     cd "$workDir"
-    dnvm use -r CoreCLR -arch x64
-    dnu bundle --runtime active
+    dnvm use default -r CoreCLR -arch x64
+    dnu publish --runtime active
     if ($lastexitcode -ne 0) {
         Write-Error "Failed to bundle the application"
         exit 1
